@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Words Frequency Analyzer</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Overlay for darkened background effect -->
+    <div class="overlay"></div>
+
+    <div class="container">
+        <h2 class="text-center mb-4">Top Words Frequency Analyzer</h2>
+        <form id="wordFrequencyForm" class="mb-4">
+            <div class="form-group">
+                <label for="url">Enter URL</label>
+                <input type="url" id="url" name="url" class="form-control" placeholder="https://example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="topN">Number of Top Words</label>
+                <input type="number" id="topN" name="topN" class="form-control" placeholder="10" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Fetch Top Words</button>
+        </form>
+
+        <!-- Loader -->
+        <div id="loader" class="loader" style="display: none;"></div>
+
+        <div id="resultTable" class="table-responsive" style="display: none;">
+            <h4>Top Words Frequency</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Word</th>
+                        <th>Frequency</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <script>
+        document.getElementById("wordFrequencyForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const url = document.getElementById("url").value;
+            const topN = document.getElementById("topN").value;
+            const loader = document.getElementById("loader");
+            const resultTable = document.getElementById("resultTable");
+
+            // Show loader and hide results table initially
+            loader.style.display = "block";
+            resultTable.style.display = "none";
+
+            try {
+                const response = await fetch("http://localhost:5000/api/fetch-top-words", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ url, topN }),
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch data from the server.");
+                }
+
+                const data = await response.json();
+                const resultsBody = document.getElementById("resultsBody");
+                resultsBody.innerHTML = "";
+
+                data.topWords.forEach((item) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `<td>${item.word}</td><td>${item.frequency}</td>`;
+                    resultsBody.appendChild(row);
+                });
+
+                // Show results table
+                resultTable.style.display = "block";
+            } catch (error) {
+                alert("Error: " + error.message);
+            } finally {
+                // Hide loader after processing
+                loader.style.display = "none";
+            }
+        });
+    </script>
+</body>
+</html>
